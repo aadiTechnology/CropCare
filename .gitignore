@@ -1,0 +1,41 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+backend/.venv/
+*.egg-info/
+
+# Node / Expo
+node_modules/
+.expo/
+dist/
+web-build/
+mobile/.expo-export-test/
+npm-debug.log*
+*.tsbuildinfo
+
+# OS and editors
+.DS_Store
+Thumbs.db
+*.log
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Machine learning datasets and model binaries
+ml/.venv/
+ml/data/
+ml/artifacts/
+*.tflite
+*.keras

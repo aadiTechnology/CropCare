@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "framework": "tensorflow-keras",
+  "backbone": "MobileNetV3Small",
+  "weights_initialization": "imagenet",
+  "exported_model": null,
+  "input": {
+    "height": 224,
+    "width": 224,
+    "channels": 3,
+    "color_order": "RGB",
+    "dtype": "float32",
+    "value_range": [0, 255],
+    "resize_applied_outside_model": true,
+    "resize_method": "bilinear",
+    "preserve_aspect_ratio": false
+  },
+  "internal_scaling": {
+    "owner": "keras.applications.MobileNetV3Small include_preprocessing=True",
+    "formula": "pixel / 127.5 - 1.0",
+    "applied_inside_exported_model": true
+  },
+  "output": {
+    "type": "softmax",
+    "label_file": "labels.json",
+    "index_alignment": "output[i] is the probability of labels[i].code"
+  }
+}

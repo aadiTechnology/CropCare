@@ -1,0 +1,101 @@
+experiment: plantdoc_soybean_tomato
+source: plantdoc
+description: >
+  Optional separate experiment for the cropped PlantDoc classification
+  folders published in pratikkayal/PlantDoc-Dataset. Do not mix these
+  images into the PlantVillage manifest. Folder names below were read
+  from that repository's train directory. Tomato leaf yellow virus keeps
+  its own class code because the PlantDoc name is not the PlantVillage
+  Tomato Yellow Leaf Curl Virus label.
+image_variant: color
+require_classes:
+  - soybean_healthy
+  - tomato_healthy
+min_images_per_class: 30
+min_groups_per_class: 3
+min_side: 32
+split:
+  train: 0.70
+  val: 0.15
+  test: 0.15
+  seed: 42
+grouping:
+  filename_leaf_key: false
+  leaf_map: null
+  phash_hash_size: 8
+  phash_max_distance: 6
+  use_voc_source: true
+licence:
+  name: CC BY 4.0
+  citation: "Singh et al., CoDS COMAD 2020, doi:10.1145/3371158.3371196"
+  url: "https://github.com/pratikkayal/PlantDoc-Object-Detection-Dataset/blob/master/LICENSE.txt"
+classes:
+  - code: soybean_healthy
+    crop: soybean
+    role: healthy
+    dataset_label: Soyabean leaf
+    folder_names:
+      - Soyabean leaf
+      - Soybean leaf
+      - Soyabean Healthy
+  - code: tomato_healthy
+    crop: tomato
+    role: healthy
+    dataset_label: Tomato leaf
+    folder_names:
+      - Tomato leaf
+      - Tomato Healthy
+  - code: tomato_bacterial_spot
+    crop: tomato
+    role: disease
+    dataset_label: Tomato leaf bacterial spot
+    folder_names:
+      - Tomato leaf bacterial spot
+      - Tomato Bacterial Spot
+  - code: tomato_early_blight
+    crop: tomato
+    role: disease
+    dataset_label: Tomato Early blight leaf
+    folder_names:
+      - Tomato Early blight leaf
+      - Tomato Early Blight
+  - code: tomato_late_blight
+    crop: tomato
+    role: disease
+    dataset_label: Tomato leaf late blight
+    folder_names:
+      - Tomato leaf late blight
+      - Tomato Late Blight
+  - code: tomato_septoria_leaf_spot
+    crop: tomato
+    role: disease
+    dataset_label: Tomato Septoria leaf spot
+    folder_names:
+      - Tomato Septoria leaf spot
+      - Tomato Septoria Leaf Spot
+  - code: tomato_mosaic_virus
+    crop: tomato
+    role: disease
+    dataset_label: Tomato leaf mosaic virus
+    folder_names:
+      - Tomato leaf mosaic virus
+      - Tomato Mosaic Virus
+  - code: tomato_yellow_virus
+    crop: tomato
+    role: disease
+    dataset_label: Tomato leaf yellow virus
+    folder_names:
+      - Tomato leaf yellow virus
+      - Tomato Yellow Virus
+  - code: tomato_mold_leaf
+    crop: tomato
+    role: disease
+    dataset_label: Tomato mold leaf
+    folder_names:
+      - Tomato mold leaf
+  - code: tomato_spider_mites
+    crop: tomato
+    role: disease
+    dataset_label: Tomato two spotted spider mites leaf
+    folder_names:
+      - Tomato two spotted spider mites leaf

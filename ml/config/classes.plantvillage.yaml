@@ -1,0 +1,97 @@
+experiment: plantvillage_soybean_tomato
+source: plantvillage
+description: >
+  Candidate labels for the original PlantVillage color images of soybean
+  and tomato. A class is written into the manifest only when its folder
+  contains enough valid images to fill train, validation, and test without
+  splitting a leaf group. The published PlantVillage collection has a
+  healthy soybean class and no soybean disease class.
+image_variant: color
+require_classes:
+  - soybean_healthy
+  - tomato_healthy
+min_images_per_class: 30
+min_groups_per_class: 3
+min_side: 32
+split:
+  train: 0.70
+  val: 0.15
+  test: 0.15
+  seed: 42
+grouping:
+  filename_leaf_key: true
+  leaf_map: null
+  phash_hash_size: 8
+  phash_max_distance: 6
+  use_voc_source: false
+licence:
+  name: CC BY-SA 3.0
+  citation: "Hughes and Salathé, arXiv:1511.08060 (2015)"
+  url: "https://arxiv.org/abs/1511.08060"
+classes:
+  - code: soybean_healthy
+    crop: soybean
+    role: healthy
+    dataset_label: Soybean___healthy
+    folder_names:
+      - Soybean___healthy
+  - code: tomato_healthy
+    crop: tomato
+    role: healthy
+    dataset_label: Tomato___healthy
+    folder_names:
+      - Tomato___healthy
+  - code: tomato_bacterial_spot
+    crop: tomato
+    role: disease
+    dataset_label: Tomato___Bacterial_spot
+    folder_names:
+      - Tomato___Bacterial_spot
+  - code: tomato_early_blight
+    crop: tomato
+    role: disease
+    dataset_label: Tomato___Early_blight
+    folder_names:
+      - Tomato___Early_blight
+  - code: tomato_late_blight
+    crop: tomato
+    role: disease
+    dataset_label: Tomato___Late_blight
+    folder_names:
+      - Tomato___Late_blight
+  - code: tomato_leaf_mold
+    crop: tomato
+    role: disease
+    dataset_label: Tomato___Leaf_Mold
+    folder_names:
+      - Tomato___Leaf_Mold
+  - code: tomato_septoria_leaf_spot
+    crop: tomato
+    role: disease
+    dataset_label: Tomato___Septoria_leaf_spot
+    folder_names:
+      - Tomato___Septoria_leaf_spot
+  - code: tomato_spider_mites
+    crop: tomato
+    role: disease
+    dataset_label: Tomato___Spider_mites Two-spotted_spider_mite
+    folder_names:
+      - Tomato___Spider_mites Two-spotted_spider_mite
+  - code: tomato_target_spot
+    crop: tomato
+    role: disease
+    dataset_label: Tomato___Target_Spot
+    folder_names:
+      - Tomato___Target_Spot
+  - code: tomato_yellow_leaf_curl_virus
+    crop: tomato
+    role: disease
+    dataset_label: Tomato___Tomato_Yellow_Leaf_Curl_Virus
+    folder_names:
+      - Tomato___Tomato_Yellow_Leaf_Curl_Virus
+  - code: tomato_mosaic_virus
+    crop: tomato
+    role: disease
+    dataset_label: Tomato___Tomato_mosaic_virus
+    folder_names:
+      - Tomato___Tomato_mosaic_virus

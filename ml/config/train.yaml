@@ -1,0 +1,15 @@
+experiment: plantvillage_soybean_tomato
+prepared_dir: data/prepared/plantvillage_soybean_tomato
+image_size: 224
+batch_size: 32
+epochs: 12
+fine_tune_epochs: 4
+fine_tune_layers: 20
+learning_rate: 0.001
+fine_tune_learning_rate: 0.0001
+seed: 42
+backbone: MobileNetV3Small
+weights: imagenet
+dropout: 0.2
+allow_mixed_sources: false
+output_dir: artifacts/runs

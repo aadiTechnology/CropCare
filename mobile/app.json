@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "CropCare AI",
+    "slug": "cropcare-ai",
+    "scheme": "cropcare",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "edu.cropcare.ai"
+    },
+    "android": {
+      "package": "edu.cropcare.ai",
+      "adaptiveIcon": {
+        "backgroundColor": "#E8F5E9",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "CropCare AI uses photos you choose so a crop image can be prepared for a future diagnosis.",
+          "cameraPermission": "CropCare AI uses the camera to photograph a crop leaf.",
+          "microphonePermission": false
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
