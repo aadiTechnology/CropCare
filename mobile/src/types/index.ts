@@ -4,9 +4,11 @@ export type DiagnosisMode = "offline" | "online";
 
 export type VerificationStatus = "sample" | "expert_verified";
 
+export type DiagnosisStatus = "development_placeholder" | "model_prediction";
+
 /**
- * Result contract for a future diagnosis.
- * Sprint 1 leaves prediction fields empty and marks the record as demo data.
+ * A model prediction carries the tomato class code and the model's own score.
+ * Placeholder results leave those fields empty. Neither result includes a remedy.
  */
 export interface DiagnosisResult {
   id: string;
@@ -18,7 +20,7 @@ export interface DiagnosisResult {
   timestamp: string;
   remedyReference: string | null;
   isDemo: boolean;
-  status: "development_placeholder";
+  status: DiagnosisStatus;
 }
 
 export interface DiagnosisRequest {

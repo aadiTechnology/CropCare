@@ -7,6 +7,7 @@ import { Screen } from "@/components/Screen";
 import { StatusMessage } from "@/components/StatusMessage";
 import { useDiagnosisSession } from "@/features/diagnosis/diagnosisSession";
 import { useLocalization } from "@/localization/LocalizationProvider";
+import type { MessageKey } from "@/localization/translate";
 import { routes } from "@/navigation/routes";
 import { colors } from "@/theme/theme";
 
@@ -21,12 +22,22 @@ function Field({ label, value }: { label: string; value: string }) {
   );
 }
 
+function formatModelScore(score: number): string {
+  return `${(score * 100).toFixed(1)}% (${score.toFixed(3)})`;
+}
+
+function className(code: string, translate: (key: MessageKey) => string): string {
+  const key = `classes.${code}` as MessageKey;
+  const translated = translate(key);
+  return translated === key ? code : translated;
+}
+
 export function ResultScreen() {
   const { t } = useLocalization();
   const router = useRouter();
   const session = useDiagnosisSession();
 
-  if (!session || !session.result.isDemo) {
+  if (!session) {
     return (
       <Screen>
         <StatusMessage message={t("result.empty")} tone="empty" />
@@ -39,8 +50,51 @@ export function ResultScreen() {
 
   const { result, imageUri } = session;
   const cropLabel = t(result.cropType === "soybean" ? "crops.soybean" : "crops.tomato");
-  const modeLabel =
-    result.mode === "offline" ? t("result.offlineInactive") : t("result.onlineInactive");
+
+  if (
+    result.status === "model_prediction" &&
+    result.predictedDiseaseClass &&
+    typeof result.confidence === "number"
+  ) {
+    return (
+      <Screen>
+        <StatusMessage message={t("result.modelDisclaimer")} tone="info" />
+        <Image
+          accessibilityLabel={t("diagnose.imagePreview")}
+          resizeMode="cover"
+          source={{ uri: imageUri }}
+          style={styles.image}
+        />
+        <Field label={t("result.crop")} value={cropLabel} />
+        <Field
+          label={t("result.predictedClass")}
+          value={className(result.predictedDiseaseClass, t)}
+        />
+        <Field label={t("result.classCode")} value={result.predictedDiseaseClass} />
+        <Field label={t("result.confidence")} value={formatModelScore(result.confidence)} />
+        <StatusMessage message={t("result.confidenceNote")} tone="info" />
+        <Field label={t("result.modelVersion")} value={result.modelVersion ?? t("common.unavailable")} />
+        <Field label={t("result.mode")} value={t("result.offlineOnDevice")} />
+        <Field label={t("result.time")} value={result.timestamp} />
+        <Field label={t("result.symptoms")} value={t("result.placeholderBody")} />
+        <Field label={t("result.remedy")} value={t("result.placeholderBody")} />
+        <Field label={t("result.prevention")} value={t("result.placeholderBody")} />
+      </Screen>
+    );
+  }
+
+  if (!result.isDemo) {
+    return (
+      <Screen>
+        <StatusMessage message={t("result.empty")} tone="empty" />
+        <Button mode="contained" onPress={() => router.push(routes.diagnose)} buttonColor={colors.primary}>
+          {t("result.emptyAction")}
+        </Button>
+      </Screen>
+    );
+  }
+
+  const modeLabel = result.mode === "offline" ? t("result.offlineInactive") : t("result.onlineInactive");
 
   return (
     <Screen>

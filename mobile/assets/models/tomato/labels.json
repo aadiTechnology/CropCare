@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "experiment": "plantvillage_tomato",
+  "source": "plantvillage",
+  "model_output": "softmax",
+  "labels": [
+    {
+      "index": 0,
+      "code": "tomato_bacterial_spot",
+      "crop": "tomato",
+      "role": "disease",
+      "dataset_label": "Tomato___Bacterial_spot"
+    },
+    {
+      "index": 1,
+      "code": "tomato_early_blight",
+      "crop": "tomato",
+      "role": "disease",
+      "dataset_label": "Tomato___Early_blight"
+    },
+    {
+      "index": 2,
+      "code": "tomato_healthy",
+      "crop": "tomato",
+      "role": "healthy",
+      "dataset_label": "Tomato___healthy"
+    },
+    {
+      "index": 3,
+      "code": "tomato_late_blight",
+      "crop": "tomato",
+      "role": "disease",
+      "dataset_label": "Tomato___Late_blight"
+    },
+    {
+      "index": 4,
+      "code": "tomato_leaf_mold",
+      "crop": "tomato",
+      "role": "disease",
+      "dataset_label": "Tomato___Leaf_Mold"
+    },
+    {
+      "index": 5,
+      "code": "tomato_mosaic_virus",
+      "crop": "tomato",
+      "role": "disease",
+      "dataset_label": "Tomato___Tomato_mosaic_virus"
+    },
+    {
+      "index": 6,
+      "code": "tomato_septoria_leaf_spot",
+      "crop": "tomato",
+      "role": "disease",
+      "dataset_label": "Tomato___Septoria_leaf_spot"
+    },
+    {
+      "index": 7,
+      "code": "tomato_spider_mites",
+      "crop": "tomato",
+      "role": "disease",
+      "dataset_label": "Tomato___Spider_mites Two-spotted_spider_mite"
+    },
+    {
+      "index": 8,
+      "code": "tomato_target_spot",
+      "crop": "tomato",
+      "role": "disease",
+      "dataset_label": "Tomato___Target_Spot"
+    },
+    {
+      "index": 9,
+      "code": "tomato_yellow_leaf_curl_virus",
+      "crop": "tomato",
+      "role": "disease",
+      "dataset_label": "Tomato___Tomato_Yellow_Leaf_Curl_Virus"
+    }
+  ]
+}

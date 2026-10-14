@@ -46,6 +46,10 @@ export type Messages = {
     cancelled: string;
     permissionDenied: string;
     analyzeError: string;
+    tomatoOnly: string;
+    modelUnavailable: string;
+    imageUnreadable: string;
+    inferenceFailed: string;
   };
   result: {
     crop: string;
@@ -63,6 +67,23 @@ export type Messages = {
     placeholderBody: string;
     empty: string;
     emptyAction: string;
+    predictedClass: string;
+    classCode: string;
+    confidenceNote: string;
+    modelDisclaimer: string;
+    offlineOnDevice: string;
+  };
+  classes: {
+    tomato_bacterial_spot: string;
+    tomato_early_blight: string;
+    tomato_healthy: string;
+    tomato_late_blight: string;
+    tomato_leaf_mold: string;
+    tomato_mosaic_virus: string;
+    tomato_septoria_leaf_spot: string;
+    tomato_spider_mites: string;
+    tomato_target_spot: string;
+    tomato_yellow_leaf_curl_virus: string;
   };
   history: {
     empty: string;
@@ -127,16 +148,21 @@ export const resources: Record<Language, Messages> = {
       takePhoto: "Take photo",
       chooseGallery: "Choose from gallery",
       analyze: "Analyze image",
-      analyzeHint: "This version shows a development preview. It does not detect a disease.",
+      analyzeHint:
+        "Choose tomato to score a leaf photo on this phone. The score is the model's confidence, not a confirmed diagnosis. This model does not cover soybean.",
       noImage: "No photo selected. Take a photo or choose one from the gallery.",
       cancelled: "Photo selection was cancelled.",
       permissionDenied: "Camera or gallery permission was not granted.",
-      analyzeError: "The preview could not be opened.",
+      analyzeError: "The photo could not be scored. No class was predicted.",
+      tomatoOnly: "This model only classifies tomato images. Soybean disease detection is not available.",
+      modelUnavailable: "The tomato model could not be loaded. No class was predicted.",
+      imageUnreadable: "This photo could not be read as pixels. No class was predicted.",
+      inferenceFailed: "The model could not score this photo. No class was predicted.",
     },
     result: {
       crop: "Crop",
       disease: "Disease label",
-      confidence: "Confidence",
+      confidence: "Model confidence",
       symptoms: "Symptoms",
       remedy: "Remedy",
       prevention: "Prevention",
@@ -148,8 +174,27 @@ export const resources: Record<Language, Messages> = {
       offlineInactive: "On this phone — model not connected",
       onlineInactive: "Online service — model not connected",
       placeholderBody: "Expert-verified text is not available in this version.",
-      empty: "There is no preview yet. Choose a photo and analyze it first.",
+      empty: "There is no result yet. Choose a tomato photo and analyze it first.",
       emptyAction: "Go to diagnosis",
+      predictedClass: "Predicted class",
+      classCode: "Class code",
+      confidenceNote:
+        "This score is the model's own confidence. It is not a guarantee that the class is correct.",
+      modelDisclaimer:
+        "This is the on-device tomato model's class and confidence. It is not a confirmed diagnosis, and it does not include a remedy.",
+      offlineOnDevice: "On this phone",
+    },
+    classes: {
+      tomato_bacterial_spot: "Bacterial spot",
+      tomato_early_blight: "Early blight",
+      tomato_healthy: "Healthy",
+      tomato_late_blight: "Late blight",
+      tomato_leaf_mold: "Leaf mold",
+      tomato_mosaic_virus: "Mosaic virus",
+      tomato_septoria_leaf_spot: "Septoria leaf spot",
+      tomato_spider_mites: "Spider mites",
+      tomato_target_spot: "Target spot",
+      tomato_yellow_leaf_curl_virus: "Yellow leaf curl virus",
     },
     history: {
       empty: "No records yet.",
@@ -166,10 +211,10 @@ export const resources: Record<Language, Messages> = {
       description:
         "CropCare AI is an academic app for soybean and tomato disease detection, being built for farmers in Maharashtra.",
       cropsTitle: "Supported crops",
-      cropsBody: "Soybean and tomato.",
+      cropsBody: "Tomato leaf photos can be scored on this phone. Soybean disease detection is not available.",
       stageTitle: "Development stage",
       stageBody:
-        "Sprint 1 sets up the mobile app and the server. Disease detection is not available yet.",
+        "The PlantVillage tomato model scores a tomato photo on this phone. That score is model confidence, not a confirmed diagnosis. Soybean disease detection and expert remedies are not available.",
       disclaimerTitle: "Academic use",
       disclaimerBody:
         "This app is for academic use. Sample text is not expert-verified farming advice.",
@@ -215,16 +260,21 @@ export const resources: Record<Language, Messages> = {
       takePhoto: "फोटो काढा",
       chooseGallery: "गॅलरीमधून निवडा",
       analyze: "प्रतिमेचे विश्लेषण करा",
-      analyzeHint: "ही आवृत्ती फक्त विकास नमुना दाखवते. ती रोग ओळखत नाही.",
+      analyzeHint:
+        "पानाचा फोटो या फोनवर तपासण्यासाठी टोमॅटो निवडा. गुण म्हणजे मॉडेलची खात्री आहे, खात्रीशीर निदान नाही. हे मॉडेल सोयाबीनला लागू होत नाही.",
       noImage: "फोटो निवडलेला नाही. फोटो काढा किंवा गॅलरीमधून निवडा.",
       cancelled: "फोटो निवड रद्द झाली.",
       permissionDenied: "कॅमेरा किंवा गॅलरीची परवानगी मिळाली नाही.",
-      analyzeError: "नमुना उघडता आला नाही.",
+      analyzeError: "फोटो तपासता आला नाही. कोणताही वर्ग अंदाजित केला नाही.",
+      tomatoOnly: "हे मॉडेल फक्त टोमॅटोच्या प्रतिमा वर्गीकृत करते. सोयाबीनच्या रोगाची ओळख उपलब्ध नाही.",
+      modelUnavailable: "टोमॅटो मॉडेल लोड होऊ शकले नाही. कोणताही वर्ग अंदाजित केला नाही.",
+      imageUnreadable: "हा फोटो पिक्सेल म्हणून वाचता आला नाही. कोणताही वर्ग अंदाजित केला नाही.",
+      inferenceFailed: "मॉडेलला या फोटोचे गुण देता आले नाहीत. कोणताही वर्ग अंदाजित केला नाही.",
     },
     result: {
       crop: "पीक",
       disease: "रोगाचे नाव",
-      confidence: "खात्रीची पातळी",
+      confidence: "मॉडेलची खात्री",
       symptoms: "लक्षणे",
       remedy: "उपाय",
       prevention: "प्रतिबंध",
@@ -236,8 +286,26 @@ export const resources: Record<Language, Messages> = {
       offlineInactive: "या फोनवर — मॉडेल जोडलेले नाही",
       onlineInactive: "ऑनलाइन सेवा — मॉडेल जोडलेले नाही",
       placeholderBody: "या आवृत्तीत तज्ञांनी पडताळलेला मजकूर उपलब्ध नाही.",
-      empty: "अद्याप नमुना नाही. आधी फोटो निवडून विश्लेषण करा.",
+      empty: "अद्याप निकाल नाही. आधी टोमॅटोचा फोटो निवडून विश्लेषण करा.",
       emptyAction: "निदानाकडे जा",
+      predictedClass: "अंदाजित वर्ग",
+      classCode: "वर्ग संकेत",
+      confidenceNote: "हा गुण मॉडेलची स्वतःची खात्री आहे. वर्ग बरोबर आहे याची हमी नाही.",
+      modelDisclaimer:
+        "हा या फोनवरील टोमॅटो मॉडेलचा वर्ग आणि खात्रीचा गुण आहे. हे खात्रीशीर निदान नाही आणि यात उपाय नाही.",
+      offlineOnDevice: "या फोनवर",
+    },
+    classes: {
+      tomato_bacterial_spot: "बॅक्टेरियल स्पॉट",
+      tomato_early_blight: "अर्ली ब्लाइट",
+      tomato_healthy: "निरोगी",
+      tomato_late_blight: "लेट ब्लाइट",
+      tomato_leaf_mold: "लीफ मोल्ड",
+      tomato_mosaic_virus: "मोझेक विषाणू",
+      tomato_septoria_leaf_spot: "सेप्टोरिया लीफ स्पॉट",
+      tomato_spider_mites: "स्पायडर माइट्स",
+      tomato_target_spot: "टार्गेट स्पॉट",
+      tomato_yellow_leaf_curl_virus: "यलो लीफ कर्ल विषाणू",
     },
     history: {
       empty: "अद्याप कोणतीही नोंद नाही.",
@@ -254,9 +322,10 @@ export const resources: Record<Language, Messages> = {
       description:
         "क्रॉपकेअर एआय हे सोयाबीन आणि टोमॅटोच्या रोग ओळखीसाठी तयार होत असलेले शैक्षणिक अॅप आहे. हे महाराष्ट्रातील शेतकऱ्यांसाठी आहे.",
       cropsTitle: "समर्थित पिके",
-      cropsBody: "सोयाबीन आणि टोमॅटो.",
+      cropsBody: "टोमॅटोच्या पानाचे फोटो या फोनवर तपासता येतात. सोयाबीनच्या रोगाची ओळख उपलब्ध नाही.",
       stageTitle: "विकास टप्पा",
-      stageBody: "स्प्रिंट १ मध्ये अॅप आणि सर्व्हरची सुरुवात आहे. रोग ओळख अद्याप उपलब्ध नाही.",
+      stageBody:
+        "प्लांटव्हिलेज टोमॅटो मॉडेल टोमॅटोचा फोटो या फोनवर तपासते. गुण म्हणजे मॉडेलची खात्री आहे, खात्रीशीर निदान नाही. सोयाबीनच्या रोगाची ओळख आणि तज्ञांचे उपाय उपलब्ध नाहीत.",
       disclaimerTitle: "शैक्षणिक वापर",
       disclaimerBody: "हे अॅप शैक्षणिक वापरासाठी आहे. नमुना मजकूर तज्ञांनी पडताळलेला शेती सल्ला नाही.",
     },

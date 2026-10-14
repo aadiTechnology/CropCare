@@ -10,6 +10,8 @@ import { HistoryScreen } from "@/features/history/HistoryScreen";
 import { HomeScreen } from "@/features/home/HomeScreen";
 import { LocalizationProvider } from "@/localization/LocalizationProvider";
 import { LanguageScreen } from "@/features/settings/LanguageScreen";
+import { diagnosisService } from "@/services/diagnosis";
+import { DiagnosisFailure } from "@/services/inference/DiagnosisFailure";
 import { theme } from "@/theme/theme";
 
 const mockPush = jest.fn();
@@ -18,6 +20,12 @@ let mockParams: { crop?: string } = {};
 jest.mock("expo-router", () => ({
   useRouter: () => ({ push: mockPush }),
   useLocalSearchParams: () => mockParams,
+}));
+
+jest.mock("@/services/diagnosis", () => ({
+  diagnosisService: {
+    analyze: jest.fn(),
+  },
 }));
 
 const mockLaunchImageLibraryAsync = jest.fn();
@@ -49,8 +57,11 @@ function renderWithProviders(ui: ReactElement) {
 }
 
 describe("mobile screens", () => {
+  const analyze = diagnosisService.analyze as jest.Mock;
+
   beforeEach(() => {
     mockPush.mockClear();
+    analyze.mockReset();
     mockParams = {};
     resetDiagnosisSession();
     mockRequestMediaLibraryPermissionsAsync.mockResolvedValue({ granted: true });
@@ -124,10 +135,22 @@ describe("mobile screens", () => {
     expect(mockLaunchCameraAsync).not.toHaveBeenCalled();
   });
 
-  it("opens a demo result after a photo is selected", async () => {
+  it("shows the tomato class and model confidence after a photo is scored", async () => {
     mockLaunchCameraAsync.mockResolvedValueOnce({
       canceled: false,
       assets: [{ uri: "file:///camera-leaf.jpg" }],
+    });
+    analyze.mockResolvedValueOnce({
+      id: "tomato-test",
+      cropType: "tomato",
+      predictedDiseaseClass: "tomato_healthy",
+      confidence: 0.91,
+      modelVersion: "plantvillage_tomato",
+      mode: "offline",
+      timestamp: "2026-10-14T04:00:00.000Z",
+      remedyReference: null,
+      isDemo: false,
+      status: "model_prediction",
     });
     const diagnose = await renderWithProviders(<DiagnoseScreen />);
 
@@ -138,13 +161,57 @@ describe("mobile screens", () => {
     await fireEvent.press(screen.getByText("Analyze image"));
 
     await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/result"));
+    expect(analyze).toHaveBeenCalledWith({
+      cropType: "tomato",
+      imageUri: "file:///camera-leaf.jpg",
+      mode: "offline",
+    });
     await diagnose.unmount();
 
     await renderWithProviders(<ResultScreen />);
-    expect(screen.getByText("Demo data — this is not a real diagnosis")).toBeTruthy();
-    expect(screen.getByText("Tomato")).toBeTruthy();
-    expect(screen.getAllByText("Not available").length).toBeGreaterThan(0);
-    expect(screen.getByText(/This is a development preview. It is not a diagnosis/)).toBeTruthy();
+    expect(screen.getByText("Healthy")).toBeTruthy();
+    expect(screen.getByText("tomato_healthy")).toBeTruthy();
+    expect(screen.getByText("91.0% (0.910)")).toBeTruthy();
+    expect(screen.getByText("Model confidence")).toBeTruthy();
+    expect(
+      screen.getByText("This score is the model's own confidence. It is not a guarantee that the class is correct."),
+    ).toBeTruthy();
+    expect(screen.getByText("plantvillage_tomato")).toBeTruthy();
+    expect(screen.getAllByText("Expert-verified text is not available in this version.").length).toBe(3);
+    expect(screen.queryByText("Demo data — this is not a real diagnosis")).toBeNull();
+  });
+
+  it("shows a model error and does not open a result when scoring fails", async () => {
+    mockLaunchImageLibraryAsync.mockResolvedValueOnce({
+      canceled: false,
+      assets: [{ uri: "file:///leaf.jpg" }],
+    });
+    analyze.mockRejectedValueOnce(new DiagnosisFailure("model_unavailable"));
+    await renderWithProviders(<DiagnoseScreen initialCrop="tomato" />);
+
+    await fireEvent.press(screen.getByText("Choose from gallery"));
+    await fireEvent.press(screen.getByText("Analyze image"));
+
+    expect(await screen.findByText("The tomato model could not be loaded. No class was predicted.")).toBeTruthy();
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it("tells the user that soybean is outside this tomato model", async () => {
+    mockLaunchCameraAsync.mockResolvedValueOnce({
+      canceled: false,
+      assets: [{ uri: "file:///soy.jpg" }],
+    });
+    analyze.mockRejectedValueOnce(new DiagnosisFailure("unsupported_crop"));
+    await renderWithProviders(<DiagnoseScreen />);
+
+    expect(
+      screen.getByText("This model only classifies tomato images. Soybean disease detection is not available."),
+    ).toBeTruthy();
+    await fireEvent.press(screen.getByText("Take photo"));
+    await fireEvent.press(screen.getByText("Analyze image"));
+
+    expect(await screen.findByText("This model only classifies tomato images. Soybean disease detection is not available.")).toBeTruthy();
+    expect(mockPush).not.toHaveBeenCalled();
   });
 
   it("switches the visible language to Marathi", async () => {

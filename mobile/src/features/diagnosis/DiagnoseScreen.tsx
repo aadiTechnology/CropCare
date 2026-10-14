@@ -16,7 +16,8 @@ import {
 } from "@/features/diagnosis/imageSelection";
 import { useLocalization } from "@/localization/LocalizationProvider";
 import { routes } from "@/navigation/routes";
-import { placeholderDiagnosisService } from "@/services/diagnosis";
+import { diagnosisService } from "@/services/diagnosis";
+import { DiagnosisFailure, type DiagnosisFailureCode } from "@/services/inference/DiagnosisFailure";
 import { colors } from "@/theme/theme";
 import type { CropType } from "@/types";
 
@@ -30,10 +31,15 @@ export function DiagnoseScreen({ initialCrop = "soybean" }: DiagnoseScreenProps)
   const [crop, setCrop] = useState<CropType>(initialCrop);
   const [selection, setSelection] = useState<ImageSelectionState>(emptyImageSelection);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analyzeError, setAnalyzeError] = useState(false);
+  const [failure, setFailure] = useState<DiagnosisFailureCode | "unknown" | null>(null);
+
+  function selectCrop(next: CropType) {
+    setCrop(next);
+    setFailure(null);
+  }
 
   async function chooseFromGallery() {
-    setAnalyzeError(false);
+    setFailure(null);
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
       setSelection((current) => applyPermissionDenied(current));
@@ -47,7 +53,7 @@ export function DiagnoseScreen({ initialCrop = "soybean" }: DiagnoseScreenProps)
   }
 
   async function takePhoto() {
-    setAnalyzeError(false);
+    setFailure(null);
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
       setSelection((current) => applyPermissionDenied(current));
@@ -65,19 +71,34 @@ export function DiagnoseScreen({ initialCrop = "soybean" }: DiagnoseScreenProps)
       return;
     }
     setIsAnalyzing(true);
-    setAnalyzeError(false);
+    setFailure(null);
     try {
-      const result = await placeholderDiagnosisService.analyze({
+      const result = await diagnosisService.analyze({
         cropType: crop,
         imageUri: selection.imageUri,
         mode: "offline",
       });
       setDiagnosisSession({ result, imageUri: selection.imageUri });
       router.push(routes.result);
-    } catch {
-      setAnalyzeError(true);
+    } catch (error) {
+      setFailure(error instanceof DiagnosisFailure ? error.code : "unknown");
     } finally {
       setIsAnalyzing(false);
+    }
+  }
+
+  function failureMessage(code: DiagnosisFailureCode | "unknown"): string {
+    switch (code) {
+      case "unsupported_crop":
+        return t("diagnose.tomatoOnly");
+      case "model_unavailable":
+        return t("diagnose.modelUnavailable");
+      case "image_unreadable":
+        return t("diagnose.imageUnreadable");
+      case "inference_failed":
+        return t("diagnose.inferenceFailed");
+      default:
+        return t("diagnose.analyzeError");
     }
   }
 
@@ -86,8 +107,8 @@ export function DiagnoseScreen({ initialCrop = "soybean" }: DiagnoseScreenProps)
       <Text accessibilityRole="header" style={styles.heading} variant="headlineSmall">
         {t("diagnose.selectCrop")}
       </Text>
-      <CropCard crop="soybean" onPress={setCrop} selected={crop === "soybean"} />
-      <CropCard crop="tomato" onPress={setCrop} selected={crop === "tomato"} />
+      <CropCard crop="soybean" onPress={selectCrop} selected={crop === "soybean"} />
+      <CropCard crop="tomato" onPress={selectCrop} selected={crop === "tomato"} />
 
       <View style={styles.preview}>
         {selection.imageUri ? (
@@ -112,7 +133,10 @@ export function DiagnoseScreen({ initialCrop = "soybean" }: DiagnoseScreenProps)
       {selection.notice === "permission_denied" ? (
         <StatusMessage message={t("diagnose.permissionDenied")} tone="error" />
       ) : null}
-      {analyzeError ? <StatusMessage message={t("diagnose.analyzeError")} tone="error" /> : null}
+      {crop === "soybean" && !failure ? (
+        <StatusMessage message={t("diagnose.tomatoOnly")} tone="info" />
+      ) : null}
+      {failure ? <StatusMessage message={failureMessage(failure)} tone="error" /> : null}
 
       <Button
         contentStyle={styles.buttonContent}

@@ -30,11 +30,12 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "CropCare AI uses photos you choose so a crop image can be prepared for a future diagnosis.",
-          "cameraPermission": "CropCare AI uses the camera to photograph a crop leaf.",
+          "photosPermission": "CropCare AI uses a tomato photo you choose so the on-device model can score it.",
+          "cameraPermission": "CropCare AI uses the camera to photograph a tomato leaf for on-device scoring.",
           "microphonePermission": false
         }
-      ]
+      ],
+      "react-native-fast-tflite"
     ],
     "experiments": {
       "typedRoutes": true
