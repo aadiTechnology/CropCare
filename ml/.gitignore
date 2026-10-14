@@ -1,5 +1,6 @@
 .venv/
 data/
 artifacts/
+.ipynb_checkpoints/
 *.tflite
 *.keras

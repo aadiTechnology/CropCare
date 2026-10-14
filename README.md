@@ -129,6 +129,8 @@ alembic downgrade 0001_initial_schema:base --sql
 
 Sprint 2 adds a Python training pipeline under `ml/`. It prepares labelled leaf images, trains a MobileNetV3Small baseline when TensorFlow and a local dataset are available, and exports TensorFlow Lite. The mobile app does not load that model. No model binary is stored in Git. Instructions, dataset licences, and the limits of controlled versus field images are in `ml/README.md`.
 
+The tomato training procedure is `ml/notebooks/plantvillage_tomato_colab.ipynb`. Run it in Google Colab. After it finishes, copy the downloaded bundle to `ml/artifacts/runs/plantvillage_tomato_colab/` and leave that folder uncommitted. The steps are in `ml/README.md`. Training has not been executed in this repository, so no test-set score is recorded here.
+
 ## What Sprint 1 does not do
 
 - Run inference in the mobile app or the API

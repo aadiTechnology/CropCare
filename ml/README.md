@@ -122,6 +122,34 @@ PlantDoc is the internet-scraped dataset from Singh et al., CoDS COMAD 2020, doi
 
 Neither dataset is a set of Maharashtra field photographs. This sprint did not collect field images and did not produce a field-validation score.
 
+## Tomato Colab experiment
+
+`notebooks/plantvillage_tomato_colab.ipynb` is the first tomato training run. It uses the existing prepare, train, export, and smoke commands. `config/classes.plantvillage.tomato.yaml` keeps the ten tomato entries from `config/classes.plantvillage.yaml`: healthy tomato and the nine disease folders. `config/train.tomato.yaml` uses the same MobileNetV3Small settings as `config/train.yaml` and writes the manifest under `data/prepared/plantvillage_tomato`.
+
+Open the notebook in Google Colab with a GPU runtime and run the cells from the top.
+
+1. Point the notebook at this version of the repository. Set `CROPCARE_GIT_URL` when the remote already contains `ml/config/train.tomato.yaml`. Otherwise upload a zip of the local repository when the notebook asks.
+2. Install `requirements-train.txt`.
+3. The notebook downloads the `mohanty/PlantVillage` dataset card and stops unless that card states CC BY-SA 3.0 for PlantVillage.
+4. It sparse-checkouts the mapped color folders from `https://github.com/spMohanty/PlantVillage-Dataset.git`.
+5. `python -m cropcare_ml.verify layout --require-complete` counts those folders.
+6. `python -m cropcare_ml.prepare` builds the manifest. `python -m cropcare_ml.verify prepared --require-all-configured` checks class counts, the licence record, and split integrity.
+7. `cropcare_ml.train` trains MobileNetV3Small. The test-set accuracy, macro-F1, per-class precision and recall, and confusion matrix are whatever `metrics.json` and `confusion_matrix.csv` contain after that cell. This repository does not record those numbers in advance.
+8. `python -m cropcare_ml.smoke` loads `model.tflite` and runs one test-split image. That result is a load check.
+9. The last cell zips `model.tflite`, `model.keras`, `labels.json`, `preprocessing.json`, `metrics.json`, `confusion_matrix.csv`, and the check files. It leaves the images on the Colab VM.
+
+Copy the downloaded zip onto the development machine:
+
+```powershell
+cd ml
+Expand-Archive -Path "$env:USERPROFILE\Downloads\cropcare_plantvillage_tomato_sprint3.zip" -DestinationPath artifacts\runs\plantvillage_tomato_colab -Force
+git check-ignore -v artifacts\runs\plantvillage_tomato_colab\model.tflite
+```
+
+`git check-ignore` should name that TensorFlow Lite file. `ml/artifacts/` and `ml/data/` stay uncommitted. Sprint 3 reads `model.tflite`, `labels.json`, and `preprocessing.json` from `ml/artifacts/runs/plantvillage_tomato_colab/`. Keep `metrics.json` and `confusion_matrix.csv` beside them. The bundle's `SPRINT3_README.txt` repeats these paths.
+
+The notebook in Git has empty outputs. A run that finishes writes the scores into the Colab files and the downloaded bundle.
+
 ## What this machine showed
 
 Checked on 13 October 2026:
@@ -135,6 +163,12 @@ Checked on 13 October 2026:
 - The existing backend suite was run again and passed 16 tests. No backend, mobile, or database migration file was changed.
 
 No model was trained. No accuracy, macro-F1, or confusion matrix from a trained network is claimed.
+
+Checked again on 13 October 2026 for the tomato Colab experiment:
+
+- Python 3.12.1 still has no TensorFlow installed, so this PC cannot run the training cell.
+- This session did not open Google Colab and did not download the PlantVillage images.
+- `notebooks/plantvillage_tomato_colab.ipynb` is the procedure that produces the test-set report when it is run. The repository still has no trained-model accuracy, macro-F1, or confusion matrix.
 
 ## Limitations
 
