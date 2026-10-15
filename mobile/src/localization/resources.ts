@@ -72,6 +72,15 @@ export type Messages = {
     confidenceNote: string;
     modelDisclaimer: string;
     offlineOnDevice: string;
+    guidanceUnavailable: string;
+    guidanceSample: string;
+    guidanceVerified: string;
+    verificationStatus: string;
+    statusSample: string;
+    statusExpert: string;
+    source: string;
+    reviewer: string;
+    reviewedAt: string;
   };
   classes: {
     tomato_bacterial_spot: string;
@@ -89,6 +98,10 @@ export type Messages = {
     empty: string;
     sampleLabel: string;
     date: string;
+    savedHeading: string;
+    sampleHeading: string;
+    confidence: string;
+    modelVersion: string;
   };
   settings: {
     lead: string;
@@ -181,8 +194,17 @@ export const resources: Record<Language, Messages> = {
       confidenceNote:
         "This score is the model's own confidence. It is not a guarantee that the class is correct.",
       modelDisclaimer:
-        "This is the on-device tomato model's class and confidence. It is not a confirmed diagnosis, and it does not include a remedy.",
+        "This is the on-device tomato model's class and confidence. It is not a confirmed diagnosis.",
       offlineOnDevice: "On this phone",
+      guidanceUnavailable: "Verified guidance is not available yet.",
+      guidanceSample: "Unreviewed catalog text. This is not expert-verified guidance.",
+      guidanceVerified: "Expert-verified catalog text.",
+      verificationStatus: "Verification status",
+      statusSample: "Unreviewed",
+      statusExpert: "Expert verified",
+      source: "Source",
+      reviewer: "Reviewer",
+      reviewedAt: "Review date",
     },
     classes: {
       tomato_bacterial_spot: "Bacterial spot",
@@ -200,6 +222,10 @@ export const resources: Record<Language, Messages> = {
       empty: "No records yet.",
       sampleLabel: "Sample record",
       date: "Date",
+      savedHeading: "Saved diagnoses",
+      sampleHeading: "Sample records",
+      confidence: "Model confidence",
+      modelVersion: "Model version",
     },
     settings: {
       lead: "Choose the app language. English is the default.",
@@ -292,8 +318,17 @@ export const resources: Record<Language, Messages> = {
       classCode: "वर्ग संकेत",
       confidenceNote: "हा गुण मॉडेलची स्वतःची खात्री आहे. वर्ग बरोबर आहे याची हमी नाही.",
       modelDisclaimer:
-        "हा या फोनवरील टोमॅटो मॉडेलचा वर्ग आणि खात्रीचा गुण आहे. हे खात्रीशीर निदान नाही आणि यात उपाय नाही.",
+        "हा या फोनवरील टोमॅटो मॉडेलचा वर्ग आणि खात्रीचा गुण आहे. हे खात्रीशीर निदान नाही.",
       offlineOnDevice: "या फोनवर",
+      guidanceUnavailable: "पडताळलेले मार्गदर्शन अद्याप उपलब्ध नाही.",
+      guidanceSample: "हा पडताळणी न झालेला सूची मजकूर आहे. हे तज्ञांनी पडताळलेले मार्गदर्शन नाही.",
+      guidanceVerified: "हा तज्ञांनी पडताळलेला सूची मजकूर आहे.",
+      verificationStatus: "पडताळणी स्थिती",
+      statusSample: "पडताळणी बाकी",
+      statusExpert: "तज्ञांनी पडताळलेले",
+      source: "स्रोत",
+      reviewer: "पडताळणी करणारे",
+      reviewedAt: "पडताळणीची तारीख",
     },
     classes: {
       tomato_bacterial_spot: "बॅक्टेरियल स्पॉट",
@@ -311,6 +346,10 @@ export const resources: Record<Language, Messages> = {
       empty: "अद्याप कोणतीही नोंद नाही.",
       sampleLabel: "नमुना नोंद",
       date: "दिनांक",
+      savedHeading: "जतन केलेली निदाने",
+      sampleHeading: "नमुना नोंदी",
+      confidence: "मॉडेलची खात्री",
+      modelVersion: "मॉडेल आवृत्ती",
     },
     settings: {
       lead: "अॅपची भाषा निवडा. इंग्रजी ही मूळ भाषा आहे.",

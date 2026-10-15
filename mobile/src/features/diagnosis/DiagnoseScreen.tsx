@@ -17,6 +17,8 @@ import {
 import { useLocalization } from "@/localization/LocalizationProvider";
 import { routes } from "@/navigation/routes";
 import { diagnosisService } from "@/services/diagnosis";
+import { saveCompletedDiagnosis } from "@/services/history/diagnosisHistory";
+import { requestStoredGuidance } from "@/services/guidance/requestGuidance";
 import {
   diagnosisFailureCode,
   logDiagnosisDiagnostic,
@@ -82,7 +84,30 @@ export function DiagnoseScreen({ initialCrop = "soybean" }: DiagnoseScreenProps)
         imageUri: selection.imageUri,
         mode: "offline",
       });
-      setDiagnosisSession({ result, imageUri: selection.imageUri });
+      const guidance =
+        result.status === "model_prediction" && result.predictedDiseaseClass
+          ? await requestStoredGuidance({
+              cropCode: result.cropType,
+              diseaseCode: result.predictedDiseaseClass,
+            })
+          : { status: "unavailable" as const };
+      if (
+        result.status === "model_prediction" &&
+        result.predictedDiseaseClass &&
+        typeof result.confidence === "number" &&
+        result.modelVersion
+      ) {
+        await saveCompletedDiagnosis({
+          id: result.id,
+          timestamp: result.timestamp,
+          cropCode: result.cropType,
+          diseaseClassCode: result.predictedDiseaseClass,
+          confidence: result.confidence,
+          modelVersion: result.modelVersion,
+          mode: result.mode,
+        });
+      }
+      setDiagnosisSession({ result, imageUri: selection.imageUri, guidance });
       router.push(routes.result);
     } catch (error) {
       logDiagnosisDiagnostic("analyze", error);

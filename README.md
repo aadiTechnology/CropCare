@@ -72,6 +72,7 @@ API base URL: `http://127.0.0.1:8000`
 - `GET /health`
 - `GET /api/v1/crops`
 - `GET /api/v1/diseases`
+- `GET /api/v1/crops/{crop_code}/diseases/{disease_code}/guidance`
 - Interactive docs: `http://127.0.0.1:8000/docs`
 
 Tests do not need PostgreSQL:

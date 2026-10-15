@@ -2,7 +2,7 @@
 
 The CropCare API uses a dedicated PostgreSQL database named `cropcare`. Its migration history is stored in `cropcare_alembic_version`, not in another application's `alembic_version` table.
 
-The schema is defined in `backend/app/models.py` and `backend/alembic/versions/0001_initial_schema.py`. Catalog routes read `crops` and `diseases`. Empty tables return empty lists. This migration does not insert disease or remedy text.
+The schema is defined in `backend/app/models.py`, `backend/alembic/versions/0001_initial_schema.py`, and `backend/alembic/versions/0002_knowledge_provenance.py`. Catalog routes read `crops`, `diseases`, and `remedies`. Empty tables return empty lists. Neither migration inserts disease or remedy text.
 
 Uploaded images are not stored in PostgreSQL. `diagnosis_history.image_reference` is a string pointer for a future object store or on-device file reference.
 
@@ -39,8 +39,11 @@ remedies 1──* diagnosis_history   (nullable until a verified remedy is linke
 | crop_id | Foreign key to crops |
 | code | Stable class code |
 | name_en, name_mr | Display names |
-| symptoms_en, symptoms_mr | **Requires expert verification** |
+| symptoms_en, symptoms_mr | Stored text. Null stays null. **Requires expert verification** |
 | verification_status | `sample` or `expert_verified` |
+| source | Citation. Required for `expert_verified` |
+| verified_by | Reviewer. Required for `expert_verified` |
+| verified_at | Review timestamp. Required for `expert_verified` |
 | created_at | Timestamp |
 
 ### remedies
@@ -52,8 +55,9 @@ remedies 1──* diagnosis_history   (nullable until a verified remedy is linke
 | remedy_en, remedy_mr | **Requires expert verification** |
 | prevention_en, prevention_mr | **Requires expert verification** |
 | verification_status | `sample` or `expert_verified` |
-| verified_by | Expert or institution name, empty until review |
-| verified_at | Timestamp of review, empty until review |
+| source | Citation. Required for `expert_verified` |
+| verified_by | Reviewer. Required for `expert_verified` |
+| verified_at | Review timestamp. Required for `expert_verified` |
 | created_at | Timestamp |
 
 ### diagnosis_history
@@ -73,7 +77,9 @@ remedies 1──* diagnosis_history   (nullable until a verified remedy is linke
 
 ## Expert verification
 
-Do not show symptom, remedy, or prevention text to farmers as advice while `verification_status` is `sample`. A record becomes usable guidance only after an agricultural expert sets `verification_status` to `expert_verified` and, for remedies, fills `verified_by` and `verified_at`.
+Do not show symptom, remedy, or prevention text to farmers as advice while `verification_status` is `sample`. A disease or remedy row can be stored as `expert_verified` only when `source` and `verified_by` are non-empty and `verified_at` is present. The database rejects any other `verification_status`. Missing English or Marathi text stays null.
+
+`0002_knowledge_provenance` adds those disease columns, the remedy `source` column, and the checks. It does not drop tables or insert rows. Downgrading that revision removes the new columns and checks and leaves existing crop, disease, and remedy rows in place.
 
 ## Apply and roll back
 

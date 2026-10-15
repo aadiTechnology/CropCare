@@ -1,10 +1,12 @@
 import { useSyncExternalStore } from "react";
 
+import type { GuidanceLookup } from "@/services/guidance/requestGuidance";
 import type { DiagnosisResult } from "@/types";
 
 export type DiagnosisSession = {
   result: DiagnosisResult;
   imageUri: string;
+  guidance: GuidanceLookup;
 };
 
 let session: DiagnosisSession | null = null;

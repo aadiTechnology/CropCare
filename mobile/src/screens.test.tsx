@@ -11,6 +11,8 @@ import { HomeScreen } from "@/features/home/HomeScreen";
 import { LocalizationProvider } from "@/localization/LocalizationProvider";
 import { LanguageScreen } from "@/features/settings/LanguageScreen";
 import { diagnosisService } from "@/services/diagnosis";
+import { requestStoredGuidance } from "@/services/guidance/requestGuidance";
+import { saveCompletedDiagnosis } from "@/services/history/diagnosisHistory";
 import { DiagnosisFailure } from "@/services/inference/DiagnosisFailure";
 import { theme } from "@/theme/theme";
 
@@ -26,6 +28,15 @@ jest.mock("@/services/diagnosis", () => ({
   diagnosisService: {
     analyze: jest.fn(),
   },
+}));
+
+jest.mock("@/services/guidance/requestGuidance", () => ({
+  requestStoredGuidance: jest.fn(async () => ({ status: "unavailable" })),
+}));
+
+jest.mock("@/services/history/diagnosisHistory", () => ({
+  saveCompletedDiagnosis: jest.fn(async () => true),
+  loadDiagnosisHistory: jest.fn(async () => []),
 }));
 
 const mockLaunchImageLibraryAsync = jest.fn();
@@ -58,10 +69,16 @@ function renderWithProviders(ui: ReactElement) {
 
 describe("mobile screens", () => {
   const analyze = diagnosisService.analyze as jest.Mock;
+  const requestGuidance = requestStoredGuidance as jest.Mock;
+  const saveHistory = saveCompletedDiagnosis as jest.Mock;
 
   beforeEach(() => {
     mockPush.mockClear();
     analyze.mockReset();
+    requestGuidance.mockReset();
+    requestGuidance.mockResolvedValue({ status: "unavailable" });
+    saveHistory.mockReset();
+    saveHistory.mockResolvedValue(true);
     mockParams = {};
     resetDiagnosisSession();
     mockRequestMediaLibraryPermissionsAsync.mockResolvedValue({ granted: true });
@@ -177,8 +194,23 @@ describe("mobile screens", () => {
       screen.getByText("This score is the model's own confidence. It is not a guarantee that the class is correct."),
     ).toBeTruthy();
     expect(screen.getByText("plantvillage_tomato")).toBeTruthy();
-    expect(screen.getAllByText("Expert-verified text is not available in this version.").length).toBe(3);
+    expect(screen.getByText("Verified guidance is not available yet.")).toBeTruthy();
+    expect(screen.getAllByText("Not available").length).toBe(3);
     expect(screen.queryByText("Demo data — this is not a real diagnosis")).toBeNull();
+    expect(requestGuidance).toHaveBeenCalledWith({
+      cropCode: "tomato",
+      diseaseCode: "tomato_healthy",
+    });
+    expect(saveHistory).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "tomato-test",
+        cropCode: "tomato",
+        diseaseClassCode: "tomato_healthy",
+        confidence: 0.91,
+        modelVersion: "plantvillage_tomato",
+        mode: "offline",
+      }),
+    );
   });
 
   it("shows a model error and does not open a result when scoring fails", async () => {
@@ -233,6 +265,8 @@ describe("mobile screens", () => {
 
     expect(await screen.findByText("This model only classifies tomato images. Soybean disease detection is not available.")).toBeTruthy();
     expect(mockPush).not.toHaveBeenCalled();
+    expect(requestGuidance).not.toHaveBeenCalled();
+    expect(saveHistory).not.toHaveBeenCalled();
   });
 
   it("switches the visible language to Marathi", async () => {
@@ -246,8 +280,130 @@ describe("mobile screens", () => {
     );
   });
 
+  it("shows saved guidance without copying a missing translation or calling sample text verified", async () => {
+    requestGuidance.mockResolvedValueOnce({
+      status: "ready",
+      content: {
+        cropCode: "tomato",
+        diseaseCode: "tomato_healthy",
+        disease: {
+          symptomsEn: "stored-symptom-en",
+          symptomsMr: null,
+          verificationStatus: "expert_verified",
+          source: "test-citation",
+          reviewer: "test-reviewer",
+          reviewedAt: "2026-10-15T04:30:00Z",
+        },
+        remedies: [
+          {
+            remedyEn: null,
+            remedyMr: "stored-remedy-mr",
+            preventionEn: "stored-prevention-en",
+            preventionMr: null,
+            verificationStatus: "sample",
+            source: null,
+            reviewer: null,
+            reviewedAt: null,
+          },
+        ],
+      },
+    });
+    mockLaunchCameraAsync.mockResolvedValueOnce({
+      canceled: false,
+      assets: [{ uri: "file:///camera-leaf.jpg" }],
+    });
+    analyze.mockResolvedValueOnce({
+      id: "tomato-guidance",
+      cropType: "tomato",
+      predictedDiseaseClass: "tomato_healthy",
+      confidence: 0.91,
+      modelVersion: "plantvillage_tomato",
+      mode: "offline",
+      timestamp: "2026-10-15T04:30:00.000Z",
+      remedyReference: null,
+      isDemo: false,
+      status: "model_prediction",
+    });
+    const diagnose = await renderWithProviders(<DiagnoseScreen initialCrop="tomato" />);
+    await fireEvent.press(screen.getByText("Take photo"));
+    await fireEvent.press(screen.getByText("Analyze image"));
+    await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/result"));
+    await diagnose.unmount();
+
+    await renderWithProviders(<ResultScreen />);
+    expect(screen.getByText("Healthy")).toBeTruthy();
+    expect(screen.getByText("stored-symptom-en")).toBeTruthy();
+    expect(screen.queryByText("stored-remedy-mr")).toBeNull();
+    expect(screen.getByText("stored-prevention-en")).toBeTruthy();
+    expect(screen.getByText("Expert verified")).toBeTruthy();
+    expect(screen.getByText("Unreviewed")).toBeTruthy();
+    expect(screen.getByText("test-citation")).toBeTruthy();
+    expect(screen.getByText("test-reviewer")).toBeTruthy();
+    expect(screen.getByText("2026-10-15T04:30:00Z")).toBeTruthy();
+    expect(screen.getByText("Expert-verified catalog text.")).toBeTruthy();
+    expect(screen.getByText("Unreviewed catalog text. This is not expert-verified guidance.")).toBeTruthy();
+  });
+
+  it("keeps the prediction visible when guidance and history storage fail", async () => {
+    requestGuidance.mockResolvedValueOnce({ status: "unavailable" });
+    saveHistory.mockResolvedValueOnce(false);
+    mockLaunchImageLibraryAsync.mockResolvedValueOnce({
+      canceled: false,
+      assets: [{ uri: "file:///leaf.jpg" }],
+    });
+    analyze.mockResolvedValueOnce({
+      id: "tomato-offline",
+      cropType: "tomato",
+      predictedDiseaseClass: "tomato_early_blight",
+      confidence: 0.42,
+      modelVersion: "plantvillage_tomato",
+      mode: "offline",
+      timestamp: "2026-10-15T05:00:00.000Z",
+      remedyReference: null,
+      isDemo: false,
+      status: "model_prediction",
+    });
+    const diagnose = await renderWithProviders(<DiagnoseScreen initialCrop="tomato" />);
+    await fireEvent.press(screen.getByText("Choose from gallery"));
+    await fireEvent.press(screen.getByText("Analyze image"));
+    await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/result"));
+    expect(saveHistory).toHaveBeenCalled();
+    await diagnose.unmount();
+
+    await renderWithProviders(<ResultScreen />);
+    expect(screen.getByText("Early blight")).toBeTruthy();
+    expect(screen.getByText("42.0% (0.420)")).toBeTruthy();
+    expect(screen.getByText("Verified guidance is not available yet.")).toBeTruthy();
+  });
+
   it("shows an empty history state", async () => {
-    await renderWithProviders(<HistoryScreen items={[]} />);
+    await renderWithProviders(<HistoryScreen records={[]} />);
     expect(screen.getByText("No records yet.")).toBeTruthy();
+    expect(screen.getAllByText("Sample").length).toBe(2);
+  });
+
+  it("shows a saved diagnosis apart from the sample records", async () => {
+    await renderWithProviders(
+      <HistoryScreen
+        records={[
+          {
+            id: "saved-1",
+            timestamp: "2026-10-15T04:30:00.000Z",
+            cropCode: "tomato",
+            diseaseClassCode: "tomato_late_blight",
+            confidence: 0.8,
+            modelVersion: "plantvillage_tomato",
+            mode: "offline",
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("Saved diagnoses")).toBeTruthy();
+    expect(screen.getByText("Late blight")).toBeTruthy();
+    expect(screen.getByText(/tomato_late_blight/)).toBeTruthy();
+    expect(screen.getByText("Sample records")).toBeTruthy();
+    expect(screen.getAllByText("Sample").length).toBe(2);
+    expect(screen.getAllByText("Sample record").length).toBe(2);
   });
 });

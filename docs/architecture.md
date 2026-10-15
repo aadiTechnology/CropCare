@@ -48,7 +48,7 @@ The result screen always shows a disclaimer. It does not invent a disease label 
 
 ## Backend boundary
 
-FastAPI exposes liveness at `/health` without using the database. `/health/ready` and the crop and disease catalog routes query the dedicated `cropcare` PostgreSQL database. They do not predict a disease.
+FastAPI exposes liveness at `/health` without using the database. `/health/ready`, the crop and disease catalog routes, and `GET /api/v1/crops/{crop_code}/diseases/{disease_code}/guidance` query the dedicated `cropcare` PostgreSQL database. They do not predict a disease. Guidance returns stored rows for a tomato class from `mobile/assets/models/tomato/labels.json`. Soybean is rejected. `sample` stays unreviewed, and `expert_verified` requires source, reviewer, and review timestamp.
 
 PostgreSQL access is confined to `backend/app/database.py`. The engine is created on first use. If `DATABASE_URL` is missing, only that first use fails. Importing `app.main` and calling `/health` or the catalog routes succeeds without PostgreSQL.
 

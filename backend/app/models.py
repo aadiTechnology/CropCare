@@ -8,7 +8,7 @@ import uuid
 from datetime import datetime
 from enum import Enum
 
-from sqlalchemy import DateTime, Float, ForeignKey, String, Text, Uuid, func
+from sqlalchemy import CheckConstraint, DateTime, Float, ForeignKey, String, Text, Uuid, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -26,6 +26,17 @@ class DiagnosisMode(str, Enum):
     ONLINE = "online"
 
 
+# Kept in sync with alembic revision 0002_knowledge_provenance. A later rule
+# change needs a new revision; do not rewrite this SQL after 0002 is applied.
+VERIFICATION_STATUS_CHECK = "verification_status IN ('sample', 'expert_verified')"
+EXPERT_PROVENANCE_CHECK = (
+    "verification_status <> 'expert_verified' OR ("
+    "source IS NOT NULL AND length(trim(source)) > 0 AND "
+    "verified_by IS NOT NULL AND length(trim(verified_by)) > 0 AND "
+    "verified_at IS NOT NULL)"
+)
+
+
 class Crop(Base):
     __tablename__ = "crops"
 
@@ -40,6 +51,10 @@ class Crop(Base):
 
 class Disease(Base):
     __tablename__ = "diseases"
+    __table_args__ = (
+        CheckConstraint(VERIFICATION_STATUS_CHECK, name="ck_diseases_verification_status"),
+        CheckConstraint(EXPERT_PROVENANCE_CHECK, name="ck_diseases_expert_provenance"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     crop_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("crops.id"), nullable=False)
@@ -52,6 +67,10 @@ class Disease(Base):
     verification_status: Mapped[str] = mapped_column(
         String(32), nullable=False, default=VerificationStatus.SAMPLE.value
     )
+    # Citation for the stored text. Required when verification_status is expert_verified.
+    source: Mapped[str | None] = mapped_column(Text, nullable=True)
+    verified_by: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     crop: Mapped[Crop] = relationship(back_populates="diseases")
@@ -60,6 +79,10 @@ class Disease(Base):
 
 class Remedy(Base):
     __tablename__ = "remedies"
+    __table_args__ = (
+        CheckConstraint(VERIFICATION_STATUS_CHECK, name="ck_remedies_verification_status"),
+        CheckConstraint(EXPERT_PROVENANCE_CHECK, name="ck_remedies_expert_provenance"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     disease_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("diseases.id"), nullable=False)
@@ -71,6 +94,8 @@ class Remedy(Base):
     verification_status: Mapped[str] = mapped_column(
         String(32), nullable=False, default=VerificationStatus.SAMPLE.value
     )
+    # Citation for the stored text. Required when verification_status is expert_verified.
+    source: Mapped[str | None] = mapped_column(Text, nullable=True)
     verified_by: Mapped[str | None] = mapped_column(String(160), nullable=True)
     verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

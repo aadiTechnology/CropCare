@@ -40,8 +40,10 @@ def get_database_url() -> str:
 
 
 def run_migrations_offline() -> None:
+    url = get_database_url()
+    assert_cropcare_migration_target(url)
     context.configure(
-        url=get_database_url(),
+        url=url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
