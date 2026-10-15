@@ -151,6 +151,18 @@ describe("guidance client", () => {
     ).resolves.toEqual({ status: "unavailable" });
   });
 
+  it("treats 422 and 503 responses as no guidance", async () => {
+    const unsupported = jest.fn(async () => jsonResponse(422, { detail: "Disease class code is not supported." }));
+    await expect(
+      requestStoredGuidance({ cropCode: "tomato", diseaseCode: "not_a_class", fetchImpl: unsupported }),
+    ).resolves.toEqual({ status: "unavailable" });
+
+    const unavailable = jest.fn(async () => jsonResponse(503, { detail: "Database is unavailable." }));
+    await expect(
+      requestStoredGuidance({ cropCode: "tomato", diseaseCode: "tomato_healthy", fetchImpl: unavailable }),
+    ).resolves.toEqual({ status: "unavailable" });
+  });
+
   it("does not call the API for soybean", async () => {
     const fetchImpl = jest.fn();
     await expect(

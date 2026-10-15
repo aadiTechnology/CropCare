@@ -45,7 +45,7 @@ export function createHistoryStore(file: HistoryFileAccess): DiagnosisHistorySto
         if (raw != null && existing == null) {
           return false;
         }
-        const records = [record, ...(existing ?? []).filter((item) => item.id !== record.id)];
+        const records = uniqueKeepingFirst([record, ...(existing ?? [])]);
         await file.writeText(serializeHistoryDocument(records));
         return true;
       } catch {
@@ -65,21 +65,37 @@ export function parseHistoryDocument(raw: string): StoredDiagnosis[] | null {
     if (body.version !== DOCUMENT_VERSION || !Array.isArray(body.records)) {
       return null;
     }
-    const records: StoredDiagnosis[] = [];
-    for (const item of body.records) {
-      if (!isStoredDiagnosis(item)) {
-        return null;
-      }
-      records.push(item);
-    }
-    return records;
+    const records = body.records.filter(isStoredDiagnosis);
+    return uniqueKeepingFirst(sortNewestFirst(records));
   } catch {
     return null;
   }
 }
 
 export function serializeHistoryDocument(records: StoredDiagnosis[]): string {
-  return JSON.stringify({ version: DOCUMENT_VERSION, records });
+  return JSON.stringify({ version: DOCUMENT_VERSION, records: sortNewestFirst(records) });
+}
+
+function sortNewestFirst(records: StoredDiagnosis[]): StoredDiagnosis[] {
+  return [...records].sort((left, right) => {
+    if (left.timestamp !== right.timestamp) {
+      return left.timestamp < right.timestamp ? 1 : -1;
+    }
+    if (left.id !== right.id) {
+      return left.id < right.id ? 1 : -1;
+    }
+    return 0;
+  });
+}
+
+function uniqueKeepingFirst(records: StoredDiagnosis[]): StoredDiagnosis[] {
+  const byId = new Map<string, StoredDiagnosis>();
+  for (const record of records) {
+    if (!byId.has(record.id)) {
+      byId.set(record.id, record);
+    }
+  }
+  return sortNewestFirst([...byId.values()]);
 }
 
 export function isStoredDiagnosis(value: unknown): value is StoredDiagnosis {
