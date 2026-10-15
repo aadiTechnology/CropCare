@@ -37,6 +37,11 @@ jest.mock("@/services/guidance/requestGuidance", () => ({
 jest.mock("@/services/history/diagnosisHistory", () => ({
   saveCompletedDiagnosis: jest.fn(async () => true),
   loadDiagnosisHistory: jest.fn(async () => []),
+  loadDiagnosisHistoryView: jest.fn(async () => ({
+    records: [],
+    unreadableOriginalPresent: false,
+    unreadableCopyPreserved: false,
+  })),
 }));
 
 const mockLaunchImageLibraryAsync = jest.fn();
@@ -405,5 +410,24 @@ describe("mobile screens", () => {
     expect(screen.getByText("Sample records")).toBeTruthy();
     expect(screen.getAllByText("Sample").length).toBe(2);
     expect(screen.getAllByText("Sample record").length).toBe(2);
+  });
+
+  it("shows when an unreadable history file is still original and when a copy was kept", async () => {
+    const original = await renderWithProviders(
+      <HistoryScreen records={[]} unreadableOriginalPresent unreadableCopyPreserved={false} />,
+    );
+    expect(
+      screen.getByText(
+        "Saved history could not be read. The original file is still on this device. The next saved diagnosis keeps a copy of that file and starts a new list. Missing records are not recreated.",
+      ),
+    ).toBeTruthy();
+    await original.unmount();
+
+    await renderWithProviders(<HistoryScreen records={[]} unreadableCopyPreserved />);
+    expect(
+      screen.getByText(
+        "A copy of an unreadable history file was kept on this device. New diagnoses are saved separately. Missing records were not recreated.",
+      ),
+    ).toBeTruthy();
   });
 });

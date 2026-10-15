@@ -100,6 +100,8 @@ export type Messages = {
     date: string;
     savedHeading: string;
     sampleHeading: string;
+    unreadableOriginal: string;
+    unreadablePreserved: string;
     confidence: string;
     modelVersion: string;
   };
@@ -224,6 +226,10 @@ export const resources: Record<Language, Messages> = {
       date: "Date",
       savedHeading: "Saved diagnoses",
       sampleHeading: "Sample records",
+      unreadableOriginal:
+        "Saved history could not be read. The original file is still on this device. The next saved diagnosis keeps a copy of that file and starts a new list. Missing records are not recreated.",
+      unreadablePreserved:
+        "A copy of an unreadable history file was kept on this device. New diagnoses are saved separately. Missing records were not recreated.",
       confidence: "Model confidence",
       modelVersion: "Model version",
     },
@@ -348,6 +354,10 @@ export const resources: Record<Language, Messages> = {
       date: "दिनांक",
       savedHeading: "जतन केलेली निदाने",
       sampleHeading: "नमुना नोंदी",
+      unreadableOriginal:
+        "जतन केलेला इतिहास वाचता आला नाही. मूळ फाइल या डिव्हाइसवर तशीच आहे. पुढील निदान जतन करताना तिची प्रत ठेवली जाईल आणि नवीन यादी सुरू होईल. हरवलेल्या नोंदी पुन्हा तयार केल्या जात नाहीत.",
+      unreadablePreserved:
+        "न वाचता येणाऱ्या इतिहास फाइलची प्रत या डिव्हाइसवर ठेवली आहे. नवीन निदाने स्वतंत्रपणे जतन होतात. हरवलेल्या नोंदी पुन्हा तयार केल्या नाहीत.",
       confidence: "मॉडेलची खात्री",
       modelVersion: "मॉडेल आवृत्ती",
     },

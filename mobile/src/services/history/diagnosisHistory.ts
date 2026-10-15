@@ -1,4 +1,13 @@
-import { createHistoryStore, type DiagnosisHistoryStore, type StoredDiagnosis } from "./diagnosisHistoryStore";
+import {
+  createHistoryStore,
+  type DiagnosisHistoryStore,
+  type HistoryStatus,
+  type StoredDiagnosis,
+} from "./diagnosisHistoryStore";
+
+export type DiagnosisHistoryView = HistoryStatus & {
+  records: StoredDiagnosis[];
+};
 
 let storePromise: Promise<DiagnosisHistoryStore> | null = null;
 
@@ -24,10 +33,17 @@ export async function saveCompletedDiagnosis(record: StoredDiagnosis): Promise<b
 }
 
 export async function loadDiagnosisHistory(): Promise<StoredDiagnosis[]> {
+  const view = await loadDiagnosisHistoryView();
+  return view.records;
+}
+
+export async function loadDiagnosisHistoryView(): Promise<DiagnosisHistoryView> {
   try {
     const store = await openStore();
-    return await store.load();
+    const records = await store.load();
+    const status = await store.status();
+    return { records, ...status };
   } catch {
-    return [];
+    return { records: [], unreadableOriginalPresent: false, unreadableCopyPreserved: false };
   }
 }

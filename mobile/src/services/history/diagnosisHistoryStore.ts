@@ -13,44 +13,82 @@ export type StoredDiagnosis = {
 export type HistoryFileAccess = {
   readText(): Promise<string | null>;
   writeText(contents: string): Promise<void>;
+  preserveUnreadable(contents: string): Promise<void>;
+  hasPreservedUnreadable(): Promise<boolean>;
+};
+
+export type HistoryStatus = {
+  unreadableOriginalPresent: boolean;
+  unreadableCopyPreserved: boolean;
 };
 
 export type DiagnosisHistoryStore = {
   load(): Promise<StoredDiagnosis[]>;
+  status(): Promise<HistoryStatus>;
   append(record: StoredDiagnosis): Promise<boolean>;
 };
 
 const DOCUMENT_VERSION = 1;
 
 export function createHistoryStore(file: HistoryFileAccess): DiagnosisHistoryStore {
+  let chain: Promise<unknown> = Promise.resolve();
+
+  function exclusive<T>(work: () => Promise<T>): Promise<T> {
+    const run = chain.then(work, work);
+    chain = run.then(
+      () => undefined,
+      () => undefined,
+    );
+    return run;
+  }
+
   return {
-    async load() {
-      try {
-        const raw = await file.readText();
-        if (raw == null) {
+    load() {
+      return exclusive(async () => {
+        try {
+          const raw = await file.readText();
+          if (raw == null) {
+            return [];
+          }
+          return parseHistoryDocument(raw) ?? [];
+        } catch {
           return [];
         }
-        return parseHistoryDocument(raw) ?? [];
-      } catch {
-        return [];
-      }
+      });
     },
-    async append(record) {
+    status() {
+      return exclusive(async () => {
+        try {
+          const raw = await file.readText();
+          return {
+            unreadableOriginalPresent: raw != null && parseHistoryDocument(raw) == null,
+            unreadableCopyPreserved: await file.hasPreservedUnreadable(),
+          };
+        } catch {
+          return { unreadableOriginalPresent: false, unreadableCopyPreserved: false };
+        }
+      });
+    },
+    append(record) {
       if (!isStoredDiagnosis(record)) {
-        return false;
+        return Promise.resolve(false);
       }
-      try {
-        const raw = await file.readText();
-        const existing = raw == null ? [] : parseHistoryDocument(raw);
-        if (raw != null && existing == null) {
+      return exclusive(async () => {
+        try {
+          const raw = await file.readText();
+          const existing = raw == null ? [] : parseHistoryDocument(raw);
+          if (raw != null && existing == null) {
+            await file.preserveUnreadable(raw);
+            await file.writeText(serializeHistoryDocument([record]));
+            return true;
+          }
+          const records = uniqueKeepingFirst([record, ...(existing ?? [])]);
+          await file.writeText(serializeHistoryDocument(records));
+          return true;
+        } catch {
           return false;
         }
-        const records = uniqueKeepingFirst([record, ...(existing ?? [])]);
-        await file.writeText(serializeHistoryDocument(records));
-        return true;
-      } catch {
-        return false;
-      }
+      });
     },
   };
 }

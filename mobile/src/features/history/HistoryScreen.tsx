@@ -8,12 +8,14 @@ import { StatusMessage } from "@/components/StatusMessage";
 import { SAMPLE_HISTORY } from "@/features/history/sampleHistory";
 import { useLocalization } from "@/localization/LocalizationProvider";
 import type { MessageKey } from "@/localization/translate";
-import { loadDiagnosisHistory } from "@/services/history/diagnosisHistory";
+import { loadDiagnosisHistoryView } from "@/services/history/diagnosisHistory";
 import type { StoredDiagnosis } from "@/services/history/diagnosisHistoryStore";
 import { colors } from "@/theme/theme";
 
 type HistoryScreenProps = {
   records?: StoredDiagnosis[];
+  unreadableOriginalPresent?: boolean;
+  unreadableCopyPreserved?: boolean;
 };
 
 function formatModelScore(score: number): string {
@@ -26,31 +28,43 @@ function className(code: string, translate: (key: MessageKey) => string): string
   return translated === key ? code : translated;
 }
 
-export function HistoryScreen({ records }: HistoryScreenProps) {
+export function HistoryScreen({
+  records,
+  unreadableOriginalPresent = false,
+  unreadableCopyPreserved = false,
+}: HistoryScreenProps) {
   const { t } = useLocalization();
   const [stored, setStored] = useState<StoredDiagnosis[]>(records ?? []);
+  const [originalUnreadable, setOriginalUnreadable] = useState(unreadableOriginalPresent);
+  const [copyPreserved, setCopyPreserved] = useState(unreadableCopyPreserved);
 
   useEffect(() => {
     if (records) {
       setStored(records);
+      setOriginalUnreadable(unreadableOriginalPresent);
+      setCopyPreserved(unreadableCopyPreserved);
       return;
     }
     let cancelled = false;
-    void loadDiagnosisHistory().then((loaded) => {
+    void loadDiagnosisHistoryView().then((view) => {
       if (!cancelled) {
-        setStored(loaded);
+        setStored(view.records);
+        setOriginalUnreadable(view.unreadableOriginalPresent);
+        setCopyPreserved(view.unreadableCopyPreserved);
       }
     });
     return () => {
       cancelled = true;
     };
-  }, [records]);
+  }, [records, unreadableCopyPreserved, unreadableOriginalPresent]);
 
   return (
     <Screen>
       <Text accessibilityRole="header" variant="titleLarge">
         {t("history.savedHeading")}
       </Text>
+      {originalUnreadable ? <StatusMessage message={t("history.unreadableOriginal")} tone="info" /> : null}
+      {copyPreserved ? <StatusMessage message={t("history.unreadablePreserved")} tone="info" /> : null}
       {stored.length === 0 ? <StatusMessage message={t("history.empty")} tone="empty" /> : null}
       {stored.map((item) => (
         <View key={item.id} style={styles.card}>
