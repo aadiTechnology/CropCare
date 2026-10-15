@@ -2,7 +2,7 @@ import "./latin1TextDecoder";
 import { convertIndexedToRgb, decode as decodePng, type DecodedPng } from "fast-png";
 import { decode as decodeJpeg } from "jpeg-js";
 
-import { DiagnosisFailure } from "./DiagnosisFailure";
+import { DiagnosisFailure, rethrowDiagnosisFailure } from "./DiagnosisFailure";
 
 export type PixelImage = {
   width: number;
@@ -25,9 +25,7 @@ export function decodeImageBytes(bytes: Uint8Array): PixelImage | null {
     }
     return null;
   } catch (error) {
-    if (error instanceof DiagnosisFailure) {
-      throw error;
-    }
+    rethrowDiagnosisFailure(error);
     return null;
   }
 }

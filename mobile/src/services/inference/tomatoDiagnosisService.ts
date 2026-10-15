@@ -2,7 +2,7 @@ import type { DiagnosisRequest, DiagnosisResult } from "@/types";
 
 import type { DiagnosisService } from "../diagnosis/DiagnosisService";
 import { resizeRgbaToRgbFloat32 } from "./bilinearResize";
-import { DiagnosisFailure } from "./DiagnosisFailure";
+import { DiagnosisFailure, rethrowDiagnosisFailure } from "./DiagnosisFailure";
 import type { PixelImage } from "./decodeImageBytes";
 import { interpretSoftmax } from "./interpretOutput";
 import type { LabelFile, PreprocessingSpec } from "./modelContract";
@@ -55,9 +55,7 @@ async function decodePixels(
   try {
     return await decode(uri);
   } catch (error) {
-    if (error instanceof DiagnosisFailure) {
-      throw error;
-    }
+    rethrowDiagnosisFailure(error);
     throw new DiagnosisFailure("image_unreadable");
   }
 }
@@ -69,9 +67,7 @@ async function runModel(
   try {
     return await run(input);
   } catch (error) {
-    if (error instanceof DiagnosisFailure) {
-      throw error;
-    }
+    rethrowDiagnosisFailure(error);
     throw new DiagnosisFailure("inference_failed");
   }
 }

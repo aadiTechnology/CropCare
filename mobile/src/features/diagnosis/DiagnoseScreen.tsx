@@ -17,7 +17,11 @@ import {
 import { useLocalization } from "@/localization/LocalizationProvider";
 import { routes } from "@/navigation/routes";
 import { diagnosisService } from "@/services/diagnosis";
-import { DiagnosisFailure, type DiagnosisFailureCode } from "@/services/inference/DiagnosisFailure";
+import {
+  diagnosisFailureCode,
+  logDiagnosisDiagnostic,
+  type DiagnosisFailureCode,
+} from "@/services/inference/DiagnosisFailure";
 import { colors } from "@/theme/theme";
 import type { CropType } from "@/types";
 
@@ -81,7 +85,8 @@ export function DiagnoseScreen({ initialCrop = "soybean" }: DiagnoseScreenProps)
       setDiagnosisSession({ result, imageUri: selection.imageUri });
       router.push(routes.result);
     } catch (error) {
-      setFailure(error instanceof DiagnosisFailure ? error.code : "unknown");
+      logDiagnosisDiagnostic("analyze", error);
+      setFailure(diagnosisFailureCode(error) ?? "unknown");
     } finally {
       setIsAnalyzing(false);
     }

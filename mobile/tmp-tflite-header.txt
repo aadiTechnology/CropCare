@@ -1,0 +1,31 @@
+version 3 desc 'MLIR Converted.'
+opcodes 8
+  [0] (18, 'MUL', '')
+  [1] (0, 'ADD', '')
+  [2] (3, 'CONV_2D', '')
+  [3] (117, 'OP_117', '')
+  [4] (4, 'DEPTHWISE_CONV_2D', '')
+  [5] (40, 'MEAN', '')
+  [6] (9, 'FULLY_CONNECTED', '')
+  [7] (25, 'SOFTMAX', '')
+tensors 219 ops 108 inputs [0] outputs [218] name 'main'
+INPUTS
+  #0 name='serving_default_image_rgb_0_255:0' type=float32 shape=[1, 224, 224, 3] sig=[-1, 224, 224, 3] buf=1
+OUTPUTS
+  #218 name='StatefulPartitionedCall_1:0' type=float32 shape=[1, 10] sig=[-1, 10] buf=219
+histogram {'ADD': 7, 'CONV_2D': 41, 'DEPTHWISE_CONV_2D': 11, 'FULLY_CONNECTED': 1, 'MEAN': 10, 'MUL': 19, 'OP_117': 18, 'SOFTMAX': 1}
+FIRST 4
+  MUL in=[0, 109] out=[111] ['cropcare_mobilenet_v3_small_1/rescaling_1/mul']
+  ADD in=[111, 110] out=[112] ['cropcare_mobilenet_v3_small_1/rescaling_1/add']
+  CONV_2D in=[112, 105, 64] out=[113] ['cropcare_mobilenet_v3_small_1/conv_bn_1/batchnorm/add_1;cropcare_mobilenet_v3_small_1/conv_1/convolution;cropcare_mobilenet_v3_small_1/conv_bn_1/batchnorm/sub']
+  OP_117 in=[113] out=[114] ['cropcare_mobilenet_v3_small_1/activation_1/mul;;cropcare_mobilenet_v3_small_1/activation_1/Relu6;cropcare_mobilenet_v3_small_1/activation_1/add;cropcare_mobilenet_v3_small_1/activation_1/truediv']
+LAST 8
+  MUL in=[206, 210] out=[211] ['cropcare_mobilenet_v3_small_1/expanded_conv_10_squeeze_excite_mul_1/Mul']
+  CONV_2D in=[211, 66, 34] out=[212] ['cropcare_mobilenet_v3_small_1/expanded_conv_10_project_bn_1/batchnorm/add_1;cropcare_mobilenet_v3_small_1/expanded_conv_10_project_1/convolution;cropcare_mobilenet_v3_small_1/expanded_conv_10_project_bn_1/batchnorm/sub']
+  ADD in=[202, 212] out=[213] ['cropcare_mobilenet_v3_small_1/expanded_conv_10_add_1/Add']
+  CONV_2D in=[213, 65, 33] out=[214] ['cropcare_mobilenet_v3_small_1/conv_1_bn_1/batchnorm/add_1;cropcare_mobilenet_v3_small_1/conv_1_2/convolution;cropcare_mobilenet_v3_small_1/conv_1_bn_1/batchnorm/sub']
+  OP_117 in=[214] out=[215] ['cropcare_mobilenet_v3_small_1/activation_17_1/mul;;cropcare_mobilenet_v3_small_1/activation_17_1/Relu6;cropcare_mobilenet_v3_small_1/activation_17_1/add;cropcare_mobilenet_v3_small_1/activation_17_1/truediv']
+  MEAN in=[215, 108] out=[216] ['cropcare_mobilenet_v3_small_1/avg_pool_1/Mean']
+  FULLY_CONNECTED in=[216, 106, 32] out=[217] ['cropcare_mobilenet_v3_small_1/class_probabilities_1/MatMul;cropcare_mobilenet_v3_small_1/class_probabilities_1/BiasAdd']
+  SOFTMAX in=[217] out=[218] ['StatefulPartitionedCall_1:0']
+signatures 1

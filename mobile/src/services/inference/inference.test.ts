@@ -84,6 +84,17 @@ describe("tomato label and preprocessing contract", () => {
       ),
     ).toThrow(DiagnosisFailure);
   });
+
+  it("accepts the exported batch dimension of -1 as one image", () => {
+    expect(
+      validateModelTensors(
+        { dataType: "float32", shape: [-1, 224, 224, 3] },
+        { dataType: "float32", shape: [-1, 10] },
+        preprocessing,
+        labels.labels.length,
+      ),
+    ).toEqual({ inputElements: 224 * 224 * 3, outputElements: 10 });
+  });
 });
 
 describe("image pixels to model input", () => {
@@ -151,6 +162,18 @@ describe("tomato inference errors and output interpretation", () => {
     expect(labels.labels[9].code).toBe("tomato_yellow_leaf_curl_virus");
   });
 
+  it("accepts a softmax vector produced by the exported tomato model", () => {
+    const modelOutput = [
+      0.00133432, 0.00007330614, 0.0001861357, 0.1781424, 0.01449379, 0.01597783, 0.00418132, 0.002360255,
+      0.000001399261, 0.7832491,
+    ];
+    expect(interpretSoftmax(modelOutput, labels.labels)).toEqual({
+      index: 9,
+      code: "tomato_yellow_leaf_curl_virus",
+      score: modelOutput[9],
+    });
+  });
+
   it("refuses output that is the wrong length, non-finite, or not a softmax", () => {
     expect(() => interpretSoftmax([1, 0, 0], labels.labels)).toThrow(DiagnosisFailure);
     const nonFinite = Array.from({ length: 10 }, () => 0.1);
@@ -216,6 +239,17 @@ describe("tomato inference errors and output interpretation", () => {
 
     decode.mockResolvedValueOnce(rgbaImage(1, 1, [1, 2, 3, 255]));
     run.mockRejectedValueOnce(new DiagnosisFailure("model_unavailable"));
+    await expect(
+      service.analyze({ cropType: "tomato", imageUri: "file:///leaf.jpg", mode: "offline" }),
+    ).rejects.toMatchObject({ code: "model_unavailable" });
+
+    decode.mockResolvedValueOnce(rgbaImage(1, 1, [1, 2, 3, 255]));
+    run.mockRejectedValueOnce(
+      Object.assign(new Error("model_unavailable"), {
+        name: "DiagnosisFailure",
+        code: "model_unavailable",
+      }),
+    );
     await expect(
       service.analyze({ cropType: "tomato", imageUri: "file:///leaf.jpg", mode: "offline" }),
     ).rejects.toMatchObject({ code: "model_unavailable" });

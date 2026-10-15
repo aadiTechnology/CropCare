@@ -196,6 +196,27 @@ describe("mobile screens", () => {
     expect(mockPush).not.toHaveBeenCalled();
   });
 
+  it("shows the model scoring error when Hermes does not preserve Error subclass identity", async () => {
+    mockLaunchImageLibraryAsync.mockResolvedValueOnce({
+      canceled: false,
+      assets: [{ uri: "file:///leaf.jpg" }],
+    });
+    analyze.mockRejectedValueOnce(
+      Object.assign(new Error("inference_failed"), {
+        name: "DiagnosisFailure",
+        code: "inference_failed",
+      }),
+    );
+    await renderWithProviders(<DiagnoseScreen initialCrop="tomato" />);
+
+    await fireEvent.press(screen.getByText("Choose from gallery"));
+    await fireEvent.press(screen.getByText("Analyze image"));
+
+    expect(await screen.findByText("The model could not score this photo. No class was predicted.")).toBeTruthy();
+    expect(screen.queryByText("The photo could not be scored. No class was predicted.")).toBeNull();
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
   it("tells the user that soybean is outside this tomato model", async () => {
     mockLaunchCameraAsync.mockResolvedValueOnce({
       canceled: false,

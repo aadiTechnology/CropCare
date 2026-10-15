@@ -108,7 +108,7 @@ export function validateModelTensors(
     spatial[0] !== spec.height ||
     spatial[1] !== spec.width ||
     spatial[2] !== spec.channels ||
-    leading.some((dim) => dim !== 1)
+    leading.some((dim) => dim !== 1 && dim !== -1)
   ) {
     throw new DiagnosisFailure("model_unavailable");
   }
@@ -123,10 +123,13 @@ export function validateModelTensors(
 }
 
 function elementCount(shape: number[]): number {
-  if (shape.length === 0 || shape.some((dim) => !Number.isInteger(dim) || dim <= 0)) {
+  // Keras exports the batch as -1. After allocation it is usually 1.
+  // A reported -1 is still one image, not an unknown tensor size.
+  const dims = shape.map((dim, index) => (index === 0 && dim === -1 ? 1 : dim));
+  if (dims.length === 0 || dims.some((dim) => !Number.isInteger(dim) || dim <= 0)) {
     throw new DiagnosisFailure("model_unavailable");
   }
-  return shape.reduce((product, dim) => product * dim, 1);
+  return dims.reduce((product, dim) => product * dim, 1);
 }
 
 function asRecord(value: unknown): Record<string, unknown> {

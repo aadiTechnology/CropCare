@@ -1,7 +1,7 @@
 import { File } from "expo-file-system";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 
-import { DiagnosisFailure } from "./DiagnosisFailure";
+import { DiagnosisFailure, logDiagnosisDiagnostic, rethrowDiagnosisFailure } from "./DiagnosisFailure";
 import { decodeImageBytes, type PixelImage } from "./decodeImageBytes";
 
 /**
@@ -26,10 +26,8 @@ export async function readImagePixels(uri: string): Promise<PixelImage> {
     }
     return transcoded;
   } catch (error) {
-    if (error instanceof DiagnosisFailure) {
-      throw error;
-    }
-    console.error("Crop photo could not be decoded.", error);
+    rethrowDiagnosisFailure(error);
+    logDiagnosisDiagnostic("image-decode", error);
     throw new DiagnosisFailure("image_unreadable");
   }
 }
@@ -39,9 +37,7 @@ async function tryDecodeUri(uri: string): Promise<PixelImage | null> {
     const bytes = await new File(uri).bytes();
     return decodeImageBytes(bytes);
   } catch (error) {
-    if (error instanceof DiagnosisFailure) {
-      throw error;
-    }
+    rethrowDiagnosisFailure(error);
     return null;
   }
 }
