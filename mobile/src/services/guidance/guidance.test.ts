@@ -71,12 +71,47 @@ function jsonResponse(status: number, body: unknown): Response {
 }
 
 describe("guidance client", () => {
+  const previousApiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
+
+  afterEach(() => {
+    if (previousApiBaseUrl === undefined) {
+      delete process.env.EXPO_PUBLIC_API_BASE_URL;
+    } else {
+      process.env.EXPO_PUBLIC_API_BASE_URL = previousApiBaseUrl;
+    }
+  });
+
   it("uses the local API address when no override is set", () => {
     expect(apiBaseUrl(undefined)).toBe(DEFAULT_API_BASE_URL);
     expect(apiBaseUrl("  ")).toBe(DEFAULT_API_BASE_URL);
     expect(apiBaseUrl("http://10.0.2.2:8000/")).toBe("http://10.0.2.2:8000");
     expect(guidanceRequestUrl("tomato", "tomato_healthy", "http://127.0.0.1:8000")).toBe(
       "http://127.0.0.1:8000/api/v1/crops/tomato/diseases/tomato_healthy/guidance",
+    );
+  });
+
+  it("uses EXPO_PUBLIC_API_BASE_URL when set and the default port when it is absent", async () => {
+    delete process.env.EXPO_PUBLIC_API_BASE_URL;
+    expect(apiBaseUrl()).toBe("http://127.0.0.1:8000");
+    expect(guidanceRequestUrl("tomato", "tomato_septoria_leaf_spot")).toBe(
+      "http://127.0.0.1:8000/api/v1/crops/tomato/diseases/tomato_septoria_leaf_spot/guidance",
+    );
+
+    process.env.EXPO_PUBLIC_API_BASE_URL = "http://127.0.0.1:8010/";
+    expect(apiBaseUrl()).toBe("http://127.0.0.1:8010");
+    const fetchImpl = jest.fn(async () => {
+      throw new Error("network down");
+    });
+    await expect(
+      requestStoredGuidance({
+        cropCode: "tomato",
+        diseaseCode: "tomato_septoria_leaf_spot",
+        fetchImpl,
+      }),
+    ).resolves.toEqual({ status: "unavailable" });
+    expect(fetchImpl).toHaveBeenCalledWith(
+      "http://127.0.0.1:8010/api/v1/crops/tomato/diseases/tomato_septoria_leaf_spot/guidance",
+      expect.objectContaining({ method: "GET" }),
     );
   });
 
